@@ -701,7 +701,9 @@ const App = () => {
         )
       )
     ),
-.createElement('h3', { style: s.mTitle }, 'Edit Deal'), React.createElement('button', { style: s.mClose, onClick: () => setModal(null) }, '×')),
+    modal === 'editDeal' && editItem && React.createElement('div', { style: s.modal, onClick: () => setModal(null) },
+      React.createElement('div', { style: s.mBox, onClick: e => e.stopPropagation() },
+        React.createElement('div', { style: s.mHead }, React.createElement('h3', { style: s.mTitle }, 'Edit Deal'), React.createElement('button', { style: s.mClose, onClick: () => setModal(null) }, '×')),
         React.createElement('label', { style: s.label }, 'Client'),
         React.createElement('input', { style: s.inp, value: editItem.client, onChange: e => setEditItem({ ...editItem, client: e.target.value }) }),
         React.createElement('label', { style: s.label }, 'Product'),
