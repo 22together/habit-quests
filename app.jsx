@@ -1,8 +1,34 @@
-// INEVITABLE 2026 - V5 COMPLETE
+// INEVITABLE 2026 - V6.0
+// Fixes: Deal function, Auto theme, Timezone, Whoop in Month/Year, Calls in Year chart
 const { useState, useEffect, useMemo, useCallback } = React;
 
 const App = () => {
-  const [dark, setDark] = useState(() => JSON.parse(localStorage.getItem('v5_dark') ?? 'true'));
+  // Settings with timezone and auto theme
+  const [settings, setSettings] = useState(() => JSON.parse(localStorage.getItem('v6_settings') ?? '{"timezone":"Europe/Zurich","theme":"auto"}'));
+  
+  // Auto theme based on time
+  const getAutoTheme = () => {
+    const hour = new Date().getHours();
+    return hour >= 6 && hour < 20 ? 'light' : 'dark';
+  };
+  
+  const [dark, setDark] = useState(() => {
+    const saved = localStorage.getItem('v6_dark');
+    if (saved !== null) return JSON.parse(saved);
+    return settings.theme === 'auto' ? getAutoTheme() === 'dark' : settings.theme === 'dark';
+  });
+
+  // Update theme when settings change or on interval for auto
+  useEffect(() => {
+    if (settings.theme === 'auto') {
+      setDark(getAutoTheme() === 'dark');
+      const interval = setInterval(() => setDark(getAutoTheme() === 'dark'), 60000);
+      return () => clearInterval(interval);
+    } else {
+      setDark(settings.theme === 'dark');
+    }
+  }, [settings.theme]);
+
   const t = dark ? {
     bg: '#0a0a0f', card: 'rgba(22,22,30,0.95)', border: 'rgba(255,255,255,0.06)',
     text: '#f5f5f7', muted: '#6e6e73', accent: '#2dd4bf', accent2: '#a78bfa',
@@ -23,6 +49,11 @@ const App = () => {
     { id: 'sage', icon: '🧙', name: 'Sage', lvl: 5 }, { id: 'champion', icon: '🏆', name: 'Champion', lvl: 7 },
     { id: 'phoenix', icon: '🔥', name: 'Phoenix', lvl: 10 }, { id: 'diamond', icon: '💎', name: 'Diamond', lvl: 15 },
     { id: 'crown', icon: '👑', name: 'King', lvl: 20 }, { id: 'dragon', icon: '🐉', name: 'Dragon', lvl: 50 }
+  ];
+
+  const timezones = [
+    'Europe/Zurich', 'Europe/London', 'Europe/Berlin', 'Europe/Paris', 'America/New_York', 
+    'America/Los_Angeles', 'Asia/Tokyo', 'Asia/Singapore', 'Australia/Sydney'
   ];
 
   const cats = {
@@ -80,57 +111,65 @@ const App = () => {
     { id:'c50', name:'Dialer', icon:'📞', desc:'50 calls made', cond:'calls_50', unlocked:false },
   ];
 
-  const [player, setPlayer] = useState(() => JSON.parse(localStorage.getItem('v5_player') ?? '{"level":1,"totalXP":0,"currentXP":0,"streak":{"current":0,"best":0},"avatar":"default"}'));
-  const [incSet, setIncSet] = useState(() => JSON.parse(localStorage.getItem('v5_income') ?? '{"base":4166,"target":10000,"dealsTarget":4,"consultsTarget":15,"callsTarget":100}'));
-  const [weeklyTargets, setWeeklyTargets] = useState(() => JSON.parse(localStorage.getItem('v5_weekly') ?? '{"deals":1,"consults":4,"calls":25}'));
-  const [skillXP, setSkillXP] = useState(() => JSON.parse(localStorage.getItem('v5_skills') ?? '{"sales":0,"mindset":0,"discipline":0,"growth":0,"health":0,"planning":0}'));
-  const [questLib, setQuestLib] = useState(() => JSON.parse(localStorage.getItem('v5_quests') ?? JSON.stringify(defQuests)));
-  const [todayQ, setTodayQ] = useState(() => JSON.parse(localStorage.getItem('v5_today') ?? JSON.stringify(defQuests.filter(q=>q.on).map(q=>({...q,done:false})))));
-  const [deals, setDeals] = useState(() => JSON.parse(localStorage.getItem('v5_deals') ?? '[]'));
-  const [consults, setConsults] = useState(() => JSON.parse(localStorage.getItem('v5_consults') ?? '[]'));
-  const [calls, setCalls] = useState(() => JSON.parse(localStorage.getItem('v5_calls') ?? '[]'));
-  const [whoop, setWhoop] = useState(() => JSON.parse(localStorage.getItem('v5_whoop') ?? '{"recovery":70,"sleep":80,"strain":10,"hrv":55}'));
-  const [whoopHist, setWhoopHist] = useState(() => JSON.parse(localStorage.getItem('v5_whoopHist') ?? '[]'));
-  const [review, setReview] = useState(() => JSON.parse(localStorage.getItem('v5_review') ?? '[{"t":"Review goals","c":false},{"t":"Script adherence","c":false},{"t":"Update income","c":false},{"t":"Plan next week","c":false}]'));
-  const [achievements, setAchievements] = useState(() => JSON.parse(localStorage.getItem('v5_ach') ?? JSON.stringify(defAch)));
+  // State
+  const [player, setPlayer] = useState(() => JSON.parse(localStorage.getItem('v6_player') ?? '{"level":1,"totalXP":0,"currentXP":0,"streak":{"current":0,"best":0},"avatar":"default"}'));
+  const [incSet, setIncSet] = useState(() => JSON.parse(localStorage.getItem('v6_income') ?? '{"base":4166,"target":10000,"dealsTarget":4,"consultsTarget":15,"callsTarget":100}'));
+  const [weeklyTargets, setWeeklyTargets] = useState(() => JSON.parse(localStorage.getItem('v6_weekly') ?? '{"deals":1,"consults":4,"calls":25}'));
+  const [skillXP, setSkillXP] = useState(() => JSON.parse(localStorage.getItem('v6_skills') ?? '{"sales":0,"mindset":0,"discipline":0,"growth":0,"health":0,"planning":0}'));
+  const [questLib, setQuestLib] = useState(() => JSON.parse(localStorage.getItem('v6_quests') ?? JSON.stringify(defQuests)));
+  const [todayQ, setTodayQ] = useState(() => JSON.parse(localStorage.getItem('v6_today') ?? JSON.stringify(defQuests.filter(q=>q.on).map(q=>({...q,done:false})))));
+  const [deals, setDeals] = useState(() => JSON.parse(localStorage.getItem('v6_deals') ?? '[]'));
+  const [consults, setConsults] = useState(() => JSON.parse(localStorage.getItem('v6_consults') ?? '[]'));
+  const [calls, setCalls] = useState(() => JSON.parse(localStorage.getItem('v6_calls') ?? '[]'));
+  const [whoop, setWhoop] = useState(() => JSON.parse(localStorage.getItem('v6_whoop') ?? '{"recovery":70,"sleep":80,"strain":10,"hrv":55}'));
+  const [whoopHist, setWhoopHist] = useState(() => JSON.parse(localStorage.getItem('v6_whoopHist') ?? '[]'));
+  const [review, setReview] = useState(() => JSON.parse(localStorage.getItem('v6_review') ?? '[{"t":"Review goals","c":false},{"t":"Script adherence","c":false},{"t":"Update income","c":false},{"t":"Plan next week","c":false}]'));
+  const [achievements, setAchievements] = useState(() => JSON.parse(localStorage.getItem('v6_ach') ?? JSON.stringify(defAch)));
 
+  // Forms
   const [newDeal, setNewDeal] = useState({ client:'', product:'', commission:'' });
   const [newConsult, setNewConsult] = useState({ client:'', type:'Pension', status:'scheduled', script:'' });
   const [newCall, setNewCall] = useState({ client:'', outcome:'answered', notes:'' });
   const [newQuest, setNewQuest] = useState({ name:'', desc:'', xp:30, cat:'discipline', neg:false });
 
-  const getSwissDate = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Europe/Zurich' });
+  // Timezone-aware date
+  const getDate = () => new Date().toLocaleDateString('en-CA', { timeZone: settings.timezone });
 
+  // Daily reset
   const checkDailyReset = useCallback(() => {
-    const today = getSwissDate();
-    const lastDate = localStorage.getItem('v5_lastDate');
+    const today = getDate();
+    const lastDate = localStorage.getItem('v6_lastDate');
     if (lastDate && lastDate !== today) {
       const activeQuests = questLib.filter(q => q.on).map(q => ({ ...q, done: false }));
       setTodayQ(activeQuests);
       setPlayer(p => ({ ...p, streak: { current: p.streak.current + 1, best: Math.max(p.streak.current + 1, p.streak.best) } }));
       showToast('☀️ New day! Quests reset.');
     }
-    localStorage.setItem('v5_lastDate', today);
-  }, [questLib]);
+    localStorage.setItem('v6_lastDate', today);
+  }, [questLib, settings.timezone]);
 
   useEffect(() => { checkDailyReset(); const i = setInterval(checkDailyReset, 60000); return () => clearInterval(i); }, [checkDailyReset]);
 
-  useEffect(() => { localStorage.setItem('v5_dark', JSON.stringify(dark)); }, [dark]);
-  useEffect(() => { localStorage.setItem('v5_player', JSON.stringify(player)); }, [player]);
-  useEffect(() => { localStorage.setItem('v5_income', JSON.stringify(incSet)); }, [incSet]);
-  useEffect(() => { localStorage.setItem('v5_weekly', JSON.stringify(weeklyTargets)); }, [weeklyTargets]);
-  useEffect(() => { localStorage.setItem('v5_skills', JSON.stringify(skillXP)); }, [skillXP]);
-  useEffect(() => { localStorage.setItem('v5_quests', JSON.stringify(questLib)); }, [questLib]);
-  useEffect(() => { localStorage.setItem('v5_today', JSON.stringify(todayQ)); }, [todayQ]);
-  useEffect(() => { localStorage.setItem('v5_deals', JSON.stringify(deals)); }, [deals]);
-  useEffect(() => { localStorage.setItem('v5_consults', JSON.stringify(consults)); }, [consults]);
-  useEffect(() => { localStorage.setItem('v5_calls', JSON.stringify(calls)); }, [calls]);
-  useEffect(() => { localStorage.setItem('v5_whoop', JSON.stringify(whoop)); }, [whoop]);
-  useEffect(() => { localStorage.setItem('v5_whoopHist', JSON.stringify(whoopHist)); }, [whoopHist]);
-  useEffect(() => { localStorage.setItem('v5_review', JSON.stringify(review)); }, [review]);
-  useEffect(() => { localStorage.setItem('v5_ach', JSON.stringify(achievements)); }, [achievements]);
+  // Persistence
+  useEffect(() => { localStorage.setItem('v6_settings', JSON.stringify(settings)); }, [settings]);
+  useEffect(() => { localStorage.setItem('v6_dark', JSON.stringify(dark)); }, [dark]);
+  useEffect(() => { localStorage.setItem('v6_player', JSON.stringify(player)); }, [player]);
+  useEffect(() => { localStorage.setItem('v6_income', JSON.stringify(incSet)); }, [incSet]);
+  useEffect(() => { localStorage.setItem('v6_weekly', JSON.stringify(weeklyTargets)); }, [weeklyTargets]);
+  useEffect(() => { localStorage.setItem('v6_skills', JSON.stringify(skillXP)); }, [skillXP]);
+  useEffect(() => { localStorage.setItem('v6_quests', JSON.stringify(questLib)); }, [questLib]);
+  useEffect(() => { localStorage.setItem('v6_today', JSON.stringify(todayQ)); }, [todayQ]);
+  useEffect(() => { localStorage.setItem('v6_deals', JSON.stringify(deals)); }, [deals]);
+  useEffect(() => { localStorage.setItem('v6_consults', JSON.stringify(consults)); }, [consults]);
+  useEffect(() => { localStorage.setItem('v6_calls', JSON.stringify(calls)); }, [calls]);
+  useEffect(() => { localStorage.setItem('v6_whoop', JSON.stringify(whoop)); }, [whoop]);
+  useEffect(() => { localStorage.setItem('v6_whoopHist', JSON.stringify(whoopHist)); }, [whoopHist]);
+  useEffect(() => { localStorage.setItem('v6_review', JSON.stringify(review)); }, [review]);
+  useEffect(() => { localStorage.setItem('v6_ach', JSON.stringify(achievements)); }, [achievements]);
 
+  // Computed
   const month = new Date().toISOString().slice(0, 7);
+  const year = new Date().getFullYear().toString();
   const weekStart = (() => { const d = new Date(); d.setDate(d.getDate() - d.getDay() + 1); return d.toISOString().slice(0, 10); })();
   
   const monthlyDeals = deals.filter(d => d.date?.startsWith(month));
@@ -139,9 +178,13 @@ const App = () => {
   const weeklyDeals = deals.filter(d => d.date >= weekStart);
   const weeklyConsults = consults.filter(c => c.date >= weekStart);
   const weeklyCalls = calls.filter(c => c.date >= weekStart);
+  const yearlyDeals = deals.filter(d => d.date?.startsWith(year));
+  const yearlyCalls = calls.filter(c => c.date?.startsWith(year));
 
   const commission = monthlyDeals.reduce((s, d) => s + (d.commission || 0), 0);
   const income = incSet.base + commission;
+  const yearlyIncome = yearlyDeals.reduce((s, d) => s + (d.commission || 0), 0) + (incSet.base * (new Date().getMonth() + 1));
+  
   const posQ = todayQ.filter(q => !q.neg);
   const negQ = todayQ.filter(q => q.neg);
   const donePos = posQ.filter(q => q.done).length;
@@ -157,27 +200,29 @@ const App = () => {
     return l;
   }, [skillXP]);
 
-  const year = new Date().getFullYear().toString();
-  const totalDealsYear = deals.filter(d => d.date?.startsWith(year)).length;
-  const totalIncomeYear = deals.filter(d => d.date?.startsWith(year)).reduce((s, d) => s + (d.commission || 0), 0) + (incSet.base * (new Date().getMonth() + 1));
-
+  // Monthly history for charts
   const monthlyHistory = useMemo(() => {
     const months = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date(); d.setMonth(d.getMonth() - i);
       const ms = d.toISOString().slice(0, 7);
       const mn = d.toLocaleDateString('en', { month: 'short' });
+      const mDeals = deals.filter(x => x.date?.startsWith(ms));
+      const mWhoop = whoopHist.filter(x => x.date?.startsWith(ms));
+      const avgRecovery = mWhoop.length ? Math.round(mWhoop.reduce((s, w) => s + w.recovery, 0) / mWhoop.length) : null;
       months.push({
         month: mn,
-        income: incSet.base + deals.filter(x => x.date?.startsWith(ms)).reduce((s, x) => s + (x.commission || 0), 0),
-        deals: deals.filter(x => x.date?.startsWith(ms)).length,
+        income: incSet.base + mDeals.reduce((s, x) => s + (x.commission || 0), 0),
+        deals: mDeals.length,
         consults: consults.filter(x => x.date?.startsWith(ms)).length,
-        calls: calls.filter(x => x.date?.startsWith(ms)).length
+        calls: calls.filter(x => x.date?.startsWith(ms)).length,
+        recovery: avgRecovery
       });
     }
     return months;
-  }, [deals, consults, calls, incSet.base]);
+  }, [deals, consults, calls, whoopHist, incSet.base]);
 
+  // Achievement checker
   useEffect(() => {
     setAchievements(prev => prev.map(a => {
       if (a.unlocked) return a;
@@ -198,6 +243,7 @@ const App = () => {
     }));
   }, [deals, consults, calls, player, income, donePos]);
 
+  // Handlers
   const showToast = (msg) => { setToast({ show: true, msg }); setTimeout(() => setToast({ show: false, msg: '' }), 3000); };
 
   const calcLvl = (xp) => {
@@ -224,26 +270,28 @@ const App = () => {
   };
 
   const addDeal = () => {
-    if (!newDeal.client) return;
-    setDeals(p => [...p, { id: 'd' + Date.now(), date: getSwissDate(), ...newDeal, commission: +newDeal.commission || 0 }]);
+    if (!newDeal.client) { showToast('Please enter client name'); return; }
+    const deal = { id: 'd' + Date.now(), date: getDate(), client: newDeal.client, product: newDeal.product, commission: +newDeal.commission || 0 };
+    setDeals(p => [...p, deal]);
+    showToast('💰 Deal added! +' + deal.commission + ' CHF');
     setNewDeal({ client: '', product: '', commission: '' });
-    setModal(null); showToast('Deal +' + (newDeal.commission || 0) + ' CHF');
+    setModal(null);
   };
 
   const updateDeal = () => {
     if (!editItem) return;
     setDeals(p => p.map(d => d.id === editItem.id ? editItem : d));
-    setEditItem(null); setModal(null); showToast('Updated!');
+    setEditItem(null); setModal(null); showToast('Deal updated!');
   };
 
   const deleteDeal = (id) => {
     setDeals(p => p.filter(d => d.id !== id));
-    setEditItem(null); setModal(null); showToast('Deleted');
+    setEditItem(null); setModal(null); showToast('Deal deleted');
   };
 
   const addConsult = () => {
-    if (!newConsult.client) return;
-    setConsults(p => [...p, { id: 'c' + Date.now(), date: getSwissDate(), ...newConsult, script: +newConsult.script || null }]);
+    if (!newConsult.client) { showToast('Please enter client name'); return; }
+    setConsults(p => [...p, { id: 'c' + Date.now(), date: getDate(), ...newConsult, script: +newConsult.script || null }]);
     setNewConsult({ client: '', type: 'Pension', status: 'scheduled', script: '' });
     setModal(null); showToast('Consultation logged!');
   };
@@ -260,8 +308,8 @@ const App = () => {
   };
 
   const addCall = () => {
-    if (!newCall.client) return;
-    setCalls(p => [...p, { id: 'call' + Date.now(), date: getSwissDate(), ...newCall }]);
+    if (!newCall.client) { showToast('Please enter name'); return; }
+    setCalls(p => [...p, { id: 'call' + Date.now(), date: getDate(), ...newCall }]);
     setNewCall({ client: '', outcome: 'answered', notes: '' });
     setModal(null); showToast('Call logged!');
   };
@@ -278,7 +326,7 @@ const App = () => {
   };
 
   const addQuest = () => {
-    if (!newQuest.name) return;
+    if (!newQuest.name) { showToast('Please enter quest name'); return; }
     const q = { id: 'q' + Date.now(), name: newQuest.name, desc: newQuest.desc, xp: newQuest.neg ? -Math.abs(+newQuest.xp) : Math.abs(+newQuest.xp), cat: newQuest.cat, on: true, neg: newQuest.neg };
     setQuestLib(p => [...p, q]);
     setTodayQ(p => [...p, { ...q, done: false }]);
@@ -293,23 +341,30 @@ const App = () => {
   };
 
   const saveWhoop = () => {
-    const today = getSwissDate();
-    setWhoopHist(prev => [...prev.filter(h => h.date !== today), { date: today, ...whoop }].slice(-30));
-    setModal(null); showToast('Saved!');
+    const today = getDate();
+    setWhoopHist(prev => [...prev.filter(h => h.date !== today), { date: today, ...whoop }].slice(-90));
+    setModal(null); showToast('Health saved!');
   };
 
+  // Charts
   const LineChart = ({ data, keys, colors, height = 120 }) => {
     if (!data?.length) return React.createElement('div', { style: { height, display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.muted, fontSize: 12 } }, 'No data yet');
-    const allVals = keys.flatMap(k => data.map(d => d[k] || 0));
+    const allVals = keys.flatMap(k => data.map(d => d[k] || 0).filter(v => v !== null));
+    if (!allVals.length) return React.createElement('div', { style: { height, display: 'flex', alignItems: 'center', justifyContent: 'center', color: t.muted, fontSize: 12 } }, 'No data yet');
     const max = Math.max(...allVals, 1), min = Math.min(...allVals, 0), range = max - min || 1;
     return React.createElement('svg', { viewBox: '0 0 300 ' + height, style: { width: '100%', height } },
       [0, 0.5, 1].map((p, i) => React.createElement('line', { key: 'l'+i, x1: 40, y1: 10 + p * (height - 30), x2: 290, y2: 10 + p * (height - 30), stroke: t.border, strokeWidth: 1 })),
       [0, 0.5, 1].map((p, i) => React.createElement('text', { key: 't'+i, x: 35, y: 14 + p * (height - 30), fill: t.muted, fontSize: 9, textAnchor: 'end' }, Math.round(max - p * range))),
       keys.map((key, ki) => {
-        const pts = data.map((d, i) => (45 + (i / (data.length - 1)) * 240) + ',' + (10 + (height - 30) - ((d[key] || 0) - min) / range * (height - 30))).join(' ');
+        const validData = data.filter(d => d[key] !== null && d[key] !== undefined);
+        if (!validData.length) return null;
+        const pts = data.map((d, i) => {
+          if (d[key] === null || d[key] === undefined) return null;
+          return (45 + (i / (data.length - 1)) * 240) + ',' + (10 + (height - 30) - ((d[key] || 0) - min) / range * (height - 30));
+        }).filter(Boolean).join(' ');
         return React.createElement('g', { key },
           React.createElement('polyline', { points: pts, fill: 'none', stroke: colors[ki], strokeWidth: 2.5, strokeLinecap: 'round', strokeLinejoin: 'round' }),
-          data.map((d, i) => React.createElement('circle', { key: i, cx: 45 + (i / (data.length - 1)) * 240, cy: 10 + (height - 30) - ((d[key] || 0) - min) / range * (height - 30), r: 4, fill: colors[ki] }))
+          data.map((d, i) => d[key] !== null && d[key] !== undefined ? React.createElement('circle', { key: i, cx: 45 + (i / (data.length - 1)) * 240, cy: 10 + (height - 30) - ((d[key] || 0) - min) / range * (height - 30), r: 4, fill: colors[ki] }) : null)
         );
       }),
       data.map((d, i) => React.createElement('text', { key: 'x'+i, x: 45 + (i / (data.length - 1)) * 240, y: height - 5, fill: t.muted, fontSize: 9, textAnchor: 'middle' }, d.month || i + 1))
@@ -327,6 +382,7 @@ const App = () => {
     );
   };
 
+  // Styles
   const s = {
     wrap: { minHeight: '100vh', background: t.bg, fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif', color: t.text, padding: '16px 16px 100px' },
     content: { maxWidth: 1200, margin: '0 auto' },
@@ -384,6 +440,7 @@ const App = () => {
 
   const tabs = ['today', 'week', 'month', 'year', 'skills', 'achievements'];
 
+  // RENDER
   return React.createElement('div', { style: s.wrap },
     React.createElement('div', { style: s.content },
       // HEADER
@@ -415,9 +472,10 @@ const App = () => {
       React.createElement('nav', { style: s.nav },
         tabs.map(x => React.createElement('button', { key: x, onClick: () => setTab(x), style: { ...s.tabStyle, ...(tab === x ? s.tabOn : {}) } }, x.charAt(0).toUpperCase() + x.slice(1)))
       ),
+
       // TODAY TAB
       tab === 'today' && React.createElement('div', { style: s.mainG },
-        // Quests Card
+        // Quests
         React.createElement('div', { style: s.card },
           React.createElement('div', { style: s.cHead },
             React.createElement('div', { style: s.cTitle }, '⚔️ Daily Quests'),
@@ -440,7 +498,7 @@ const App = () => {
           ),
           React.createElement(Bar, { pct: (donePos / posQ.length) * 100, color: t.accent })
         ),
-        // Vices Card
+        // Vices
         React.createElement('div', { style: s.card },
           React.createElement('div', { style: s.cHead },
             React.createElement('div', { style: s.cTitle }, '⚠️ Vices'),
@@ -456,7 +514,7 @@ const App = () => {
             React.createElement('span', { style: { ...s.xpB, ...s.xpBN } }, q.xp)
           ))
         ),
-        // Income Card
+        // Income
         React.createElement('div', { style: s.card },
           React.createElement('div', { style: s.cHead },
             React.createElement('div', { style: s.cTitle }, '💰 Income'),
@@ -471,8 +529,8 @@ const App = () => {
           ),
           React.createElement(Bar, { pct: (income / incSet.target) * 100, color: t.green }),
           React.createElement('div', { style: { marginTop: 16 } },
-            React.createElement('div', { style: { fontSize: 12, fontWeight: 500, marginBottom: 8 } }, 'Deals (' + monthlyDeals.length + ')'),
-            monthlyDeals.length === 0 ? React.createElement('div', { style: { padding: 16, textAlign: 'center', color: t.muted, fontSize: 12 } }, 'No deals this month') :
+            React.createElement('div', { style: { fontSize: 12, fontWeight: 500, marginBottom: 8 } }, 'Deals this month (' + monthlyDeals.length + ')'),
+            monthlyDeals.length === 0 ? React.createElement('div', { style: { padding: 16, textAlign: 'center', color: t.muted, fontSize: 12 } }, 'No deals yet - add your first!') :
               monthlyDeals.slice(-5).reverse().map(d => React.createElement('div', { key: d.id, onClick: () => { setEditItem(d); setModal('editDeal'); }, style: s.listItem },
                 React.createElement('div', null,
                   React.createElement('div', { style: { fontSize: 14, fontWeight: 500 } }, d.client),
@@ -486,7 +544,7 @@ const App = () => {
             React.createElement(MiniChart, { data: monthlyHistory, k: 'income', color: t.green, h: 50 })
           )
         ),
-        // Whoop Card
+        // Whoop
         React.createElement('div', { style: s.card },
           React.createElement('div', { style: s.cHead },
             React.createElement('div', { style: s.cTitle }, '❤️ Health'),
@@ -504,6 +562,7 @@ const App = () => {
           whoopHist.length > 0 && React.createElement('div', { style: s.chartBox }, React.createElement(MiniChart, { data: whoopHist.slice(-7), k: 'recovery', color: t.green, h: 40 }))
         )
       ),
+
       // WEEK TAB
       tab === 'week' && React.createElement('div', { style: s.mainG },
         React.createElement('div', { style: s.card },
@@ -571,6 +630,7 @@ const App = () => {
           )
         )
       ),
+
       // MONTH TAB
       tab === 'month' && React.createElement('div', { style: s.mainG },
         React.createElement('div', { style: s.card },
@@ -603,26 +663,29 @@ const App = () => {
           )
         ),
         React.createElement('div', { style: { ...s.card, gridColumn: '1 / -1' } },
-          React.createElement('div', { style: s.cHead }, React.createElement('div', { style: s.cTitle }, '📈 6-Month Trends')),
-          React.createElement(LineChart, { data: monthlyHistory, keys: ['income'], colors: [t.green], height: 160 })
+          React.createElement('div', { style: s.cHead }, React.createElement('div', { style: s.cTitle }, '📈 Income & Activity')),
+          React.createElement(LineChart, { data: monthlyHistory, keys: ['income'], colors: [t.green], height: 140 }),
+          React.createElement('div', { style: s.legend },
+            React.createElement('div', { style: s.legendItem }, React.createElement('div', { style: { ...s.legendDot, background: t.green } }), ' Income')
+          )
         ),
         React.createElement('div', { style: { ...s.card, gridColumn: '1 / -1' } },
-          React.createElement('div', { style: s.cHead }, React.createElement('div', { style: s.cTitle }, '📊 Activity')),
-          React.createElement(LineChart, { data: monthlyHistory, keys: ['deals', 'consults', 'calls'], colors: [t.orange, t.green, t.blue], height: 140 }),
+          React.createElement('div', { style: s.cHead }, React.createElement('div', { style: s.cTitle }, '❤️ Health Trend')),
+          React.createElement(LineChart, { data: monthlyHistory, keys: ['recovery'], colors: [t.red], height: 120 }),
           React.createElement('div', { style: s.legend },
-            React.createElement('div', { style: s.legendItem }, React.createElement('div', { style: { ...s.legendDot, background: t.orange } }), ' Deals'),
-            React.createElement('div', { style: s.legendItem }, React.createElement('div', { style: { ...s.legendDot, background: t.green } }), ' Consults'),
-            React.createElement('div', { style: s.legendItem }, React.createElement('div', { style: { ...s.legendDot, background: t.blue } }), ' Calls')
+            React.createElement('div', { style: s.legendItem }, React.createElement('div', { style: { ...s.legendDot, background: t.red } }), ' Avg Recovery %')
           )
         )
       ),
+
       // YEAR TAB
       tab === 'year' && React.createElement('div', { style: s.mainG },
         React.createElement('div', { style: { ...s.card, gridColumn: '1 / -1' } },
           React.createElement('div', { style: s.cHead }, React.createElement('div', { style: s.cTitle }, '🎯 2026 Goals')),
           React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 } },
-            [{ n: '120K CHF Income', d: Math.round(totalIncomeYear / 1000) + 'K earned', p: totalIncomeYear, g: 120000, c: t.green },
-             { n: '48 Deals', d: totalDealsYear + ' closed', p: totalDealsYear, g: 48, c: t.orange },
+            [{ n: '120K CHF Income', d: Math.round(yearlyIncome / 1000) + 'K earned', p: yearlyIncome, g: 120000, c: t.green },
+             { n: '48 Deals', d: yearlyDeals.length + ' closed', p: yearlyDeals.length, g: 48, c: t.orange },
+             { n: '1200 Calls', d: yearlyCalls.length + ' made', p: yearlyCalls.length, g: 1200, c: t.blue },
              { n: '365 Day Streak', d: player.streak.current + ' days', p: player.streak.current, g: 365, c: t.red }
             ].map((x, i) => React.createElement('div', { key: i, style: { background: t.input, borderRadius: 16, padding: 20 } },
               React.createElement('div', { style: { fontSize: 17, fontWeight: 600, marginBottom: 4 } }, x.n),
@@ -637,13 +700,22 @@ const App = () => {
         ),
         React.createElement('div', { style: { ...s.card, gridColumn: '1 / -1' } },
           React.createElement('div', { style: s.cHead }, React.createElement('div', { style: s.cTitle }, '📈 Year Progress')),
-          React.createElement(LineChart, { data: monthlyHistory, keys: ['income', 'deals'], colors: [t.green, t.orange], height: 180 }),
+          React.createElement(LineChart, { data: monthlyHistory, keys: ['income', 'deals', 'calls'], colors: [t.green, t.orange, t.blue], height: 180 }),
           React.createElement('div', { style: s.legend },
             React.createElement('div', { style: s.legendItem }, React.createElement('div', { style: { ...s.legendDot, background: t.green } }), ' Income'),
-            React.createElement('div', { style: s.legendItem }, React.createElement('div', { style: { ...s.legendDot, background: t.orange } }), ' Deals')
+            React.createElement('div', { style: s.legendItem }, React.createElement('div', { style: { ...s.legendDot, background: t.orange } }), ' Deals'),
+            React.createElement('div', { style: s.legendItem }, React.createElement('div', { style: { ...s.legendDot, background: t.blue } }), ' Calls')
+          )
+        ),
+        React.createElement('div', { style: { ...s.card, gridColumn: '1 / -1' } },
+          React.createElement('div', { style: s.cHead }, React.createElement('div', { style: s.cTitle }, '❤️ Health Over Time')),
+          React.createElement(LineChart, { data: monthlyHistory, keys: ['recovery'], colors: [t.red], height: 120 }),
+          React.createElement('div', { style: s.legend },
+            React.createElement('div', { style: s.legendItem }, React.createElement('div', { style: { ...s.legendDot, background: t.red } }), ' Avg Recovery')
           )
         )
       ),
+
       // SKILLS TAB
       tab === 'skills' && React.createElement('div', { style: s.mainG },
         React.createElement('div', { style: s.card },
@@ -686,6 +758,7 @@ const App = () => {
           )
         )
       ),
+
       // ACHIEVEMENTS TAB
       tab === 'achievements' && React.createElement('div', { style: s.card },
         React.createElement('div', { style: s.cHead },
@@ -701,62 +774,10 @@ const App = () => {
         )
       )
     ),
-    modal === 'editDeal' && editItem && React.createElement('div', { style: s.modal, onClick: () => setModal(null) },
-      React.createElement('div', { style: s.mBox, onClick: e => e.stopPropagation() },
-        React.createElement('div', { style: s.mHead }, React.createElement('h3', { style: s.mTitle }, 'Edit Deal'), React.createElement('button', { style: s.mClose, onClick: () => setModal(null) }, '×')),
-        React.createElement('label', { style: s.label }, 'Client'),
-        React.createElement('input', { style: s.inp, value: editItem.client, onChange: e => setEditItem({ ...editItem, client: e.target.value }) }),
-        React.createElement('label', { style: s.label }, 'Product'),
-        React.createElement('input', { style: s.inp, value: editItem.product, onChange: e => setEditItem({ ...editItem, product: e.target.value }) }),
-        React.createElement('label', { style: s.label }, 'Commission'),
-        React.createElement('input', { style: s.inp, type: 'number', value: editItem.commission, onChange: e => setEditItem({ ...editItem, commission: +e.target.value }) }),
-        React.createElement('label', { style: s.label }, 'Date'),
-        React.createElement('input', { style: s.inp, type: 'date', value: editItem.date, onChange: e => setEditItem({ ...editItem, date: e.target.value }) }),
-        React.createElement('div', { style: { display: 'flex', gap: 10 } },
-          React.createElement('button', { style: { ...s.btn, ...s.btnP, flex: 1, padding: 16 }, onClick: updateDeal }, 'Save'),
-          React.createElement('button', { style: { ...s.btn, ...s.btnD, padding: 16 }, onClick: () => deleteDeal(editItem.id) }, 'Delete')
-        )
-      )
-    ),
-    modal === 'addConsult' && React.createElement('div', { style: s.modal, onClick: () => setModal(null) },
-      React.createElement('div', { style: s.mBox, onClick: e => e.stopPropagation() },
-        React.createElement('div', { style: s.mHead }, React.createElement('h3', { style: s.mTitle }, 'Log Consultation'), React.createElement('button', { style: s.mClose, onClick: () => setModal(null) }, '×')),
-        React.createElement('label', { style: s.label }, 'Client Name'),
-        React.createElement('input', { style: s.inp, placeholder: 'Enter client name', value: newConsult.client, onChange: e => setNewConsult({ ...newConsult, client: e.target.value }) }),
-        React.createElement('label', { style: s.label }, 'Type'),
-        React.createElement('select', { style: s.sel, value: newConsult.type, onChange: e => setNewConsult({ ...newConsult, type: e.target.value }) },
-          React.createElement('option', null, 'Pension'), React.createElement('option', null, 'Retirement'), React.createElement('option', null, 'Life Insurance'), React.createElement('option', null, 'Investment'), React.createElement('option', null, 'Health Insurance')
-        ),
-        React.createElement('label', { style: s.label }, 'Status'),
-        React.createElement('select', { style: s.sel, value: newConsult.status, onChange: e => setNewConsult({ ...newConsult, status: e.target.value }) },
-          React.createElement('option', { value: 'scheduled' }, 'Scheduled'), React.createElement('option', { value: 'completed' }, 'Completed'), React.createElement('option', { value: 'application' }, 'Application'), React.createElement('option', { value: 'closed' }, 'Closed'), React.createElement('option', { value: 'lost' }, 'Lost')
-        ),
-        React.createElement('label', { style: s.label }, 'Script Adherence (1-10)'),
-        React.createElement('input', { style: s.inp, type: 'number', min: 1, max: 10, placeholder: 'Rate yourself', value: newConsult.script, onChange: e => setNewConsult({ ...newConsult, script: e.target.value }) }),
-        React.createElement('button', { style: { ...s.btn, ...s.btnP, width: '100%', padding: 16, marginTop: 8 }, onClick: addConsult }, 'Log Consultation')
-      )
-    ),
-    modal === 'editConsult' && editItem && React.createElement('div', { style: s.modal, onClick: () => setModal(null) },
-      React.createElement('div', { style: s.mBox, onClick: e => e.stopPropagation() },
-        React.createElement('div', { style: s.mHead }, React.createElement('h3', { style: s.mTitle }, 'Edit Consultation'), React.createElement('button', { style: s.mClose, onClick: () => setModal(null) }, '×')),
-        React.createElement('label', { style: s.label }, 'Client'),
-        React.createElement('input', { style: s.inp, value: editItem.client, onChange: e => setEditItem({ ...editItem, client: e.target.value }) }),
-        React.createElement('label', { style: s.label }, 'Status'),
-        React.createElement('select', { style: s.sel, value: editItem.status, onChange: e => setEditItem({ ...editItem, status: e.target.value }) },
-          React.createElement('option', { value: 'scheduled' }, 'Scheduled'), React.createElement('option', { value: 'completed' }, 'Completed'), React.createElement('option', { value: 'application' }, 'Application'), React.createElement('option', { value: 'closed' }, 'Closed'), React.createElement('option', { value: 'lost' }, 'Lost')
-        ),
-        React.createElement('label', { style: s.label }, 'Script (1-10)'),
-        React.createElement('input', { style: s.inp, type: 'number', value: editItem.script || '', onChange: e => setEditItem({ ...editItem, script: +e.target.value || null }) }),
-        React.createElement('div', { style: { display: 'flex', gap: 10 } },
-          React.createElement('button', { style: { ...s.btn, ...s.btnP, flex: 1, padding: 16 }, onClick: updateConsult }, 'Save'),
-          React.createElement('button', { style: { ...s.btn, ...s.btnD, padding: 16 }, onClick: () => deleteConsult(editItem.id) }, 'Delete')
-        )
-      )
-    ),
-    modal === 'addCall' && React.createElement('div', { style: s.modal, onClick: () => setModal(null) },
+modal === 'addCall' && React.createElement('div', { style: s.modal, onClick: () => setModal(null) },
       React.createElement('div', { style: s.mBox, onClick: e => e.stopPropagation() },
         React.createElement('div', { style: s.mHead }, React.createElement('h3', { style: s.mTitle }, 'Log Call'), React.createElement('button', { style: s.mClose, onClick: () => setModal(null) }, '×')),
-        React.createElement('label', { style: s.label }, 'Client/Prospect Name'),
+        React.createElement('label', { style: s.label }, 'Client/Prospect Name *'),
         React.createElement('input', { style: s.inp, placeholder: 'Enter name', value: newCall.client, onChange: e => setNewCall({ ...newCall, client: e.target.value }) }),
         React.createElement('label', { style: s.label }, 'Outcome'),
         React.createElement('select', { style: s.sel, value: newCall.outcome, onChange: e => setNewCall({ ...newCall, outcome: e.target.value }) },
@@ -767,6 +788,8 @@ const App = () => {
         React.createElement('button', { style: { ...s.btn, ...s.btnP, width: '100%', padding: 16, marginTop: 8 }, onClick: addCall }, 'Log Call')
       )
     ),
+
+    // Edit Call Modal
     modal === 'editCall' && editItem && React.createElement('div', { style: s.modal, onClick: () => setModal(null) },
       React.createElement('div', { style: s.mBox, onClick: e => e.stopPropagation() },
         React.createElement('div', { style: s.mHead }, React.createElement('h3', { style: s.mTitle }, 'Edit Call'), React.createElement('button', { style: s.mClose, onClick: () => setModal(null) }, '×')),
@@ -784,10 +807,12 @@ const App = () => {
         )
       )
     ),
+
+    // Add Quest Modal
     modal === 'addQuest' && React.createElement('div', { style: s.modal, onClick: () => setModal(null) },
       React.createElement('div', { style: s.mBox, onClick: e => e.stopPropagation() },
         React.createElement('div', { style: s.mHead }, React.createElement('h3', { style: s.mTitle }, 'Add Quest'), React.createElement('button', { style: s.mClose, onClick: () => setModal(null) }, '×')),
-        React.createElement('label', { style: s.label }, 'Quest Name'),
+        React.createElement('label', { style: s.label }, 'Quest Name *'),
         React.createElement('input', { style: s.inp, placeholder: 'Enter name', value: newQuest.name, onChange: e => setNewQuest({ ...newQuest, name: e.target.value }) }),
         React.createElement('label', { style: s.label }, 'Description'),
         React.createElement('input', { style: s.inp, placeholder: 'Short description', value: newQuest.desc, onChange: e => setNewQuest({ ...newQuest, desc: e.target.value }) }),
@@ -806,6 +831,8 @@ const App = () => {
         React.createElement('button', { style: { ...s.btn, ...s.btnP, width: '100%', padding: 16 }, onClick: addQuest }, 'Add Quest')
       )
     ),
+
+    // Edit Quests Modal
     modal === 'editQuests' && React.createElement('div', { style: s.modal, onClick: () => setModal(null) },
       React.createElement('div', { style: s.mBox, onClick: e => e.stopPropagation() },
         React.createElement('div', { style: s.mHead }, React.createElement('h3', { style: s.mTitle }, 'Edit Quests'), React.createElement('button', { style: s.mClose, onClick: () => setModal(null) }, '×')),
@@ -820,6 +847,8 @@ const App = () => {
         React.createElement('button', { style: { ...s.btn, ...s.btnP, width: '100%', marginTop: 16, padding: 16 }, onClick: () => { setTodayQ(questLib.filter(q => q.on).map(q => { const ex = todayQ.find(x => x.id === q.id); return ex ? { ...q, done: ex.done } : { ...q, done: false }; })); setModal(null); showToast('Updated!'); } }, 'Apply (' + questLib.filter(q => q.on).length + ' active)')
       )
     ),
+
+    // Whoop Modal
     modal === 'whoop' && React.createElement('div', { style: s.modal, onClick: () => setModal(null) },
       React.createElement('div', { style: s.mBox, onClick: e => e.stopPropagation() },
         React.createElement('div', { style: s.mHead }, React.createElement('h3', { style: s.mTitle }, 'Update Health'), React.createElement('button', { style: s.mClose, onClick: () => setModal(null) }, '×')),
@@ -834,6 +863,8 @@ const App = () => {
         React.createElement('button', { style: { ...s.btn, ...s.btnP, width: '100%', padding: 16, marginTop: 8 }, onClick: saveWhoop }, 'Save')
       )
     ),
+
+    // Avatar Modal
     modal === 'avatar' && React.createElement('div', { style: s.modal, onClick: () => setModal(null) },
       React.createElement('div', { style: s.mBox, onClick: e => e.stopPropagation() },
         React.createElement('div', { style: s.mHead }, React.createElement('h3', { style: s.mTitle }, 'Select Avatar'), React.createElement('button', { style: s.mClose, onClick: () => setModal(null) }, '×')),
@@ -846,6 +877,8 @@ const App = () => {
         )
       )
     ),
+
+    // Income Settings Modal
     modal === 'incomeSet' && React.createElement('div', { style: s.modal, onClick: () => setModal(null) },
       React.createElement('div', { style: s.mBox, onClick: e => e.stopPropagation() },
         React.createElement('div', { style: s.mHead }, React.createElement('h3', { style: s.mTitle }, '💰 Income Settings'), React.createElement('button', { style: s.mClose, onClick: () => setModal(null) }, '×')),
@@ -862,6 +895,8 @@ const App = () => {
         React.createElement('button', { style: { ...s.btn, ...s.btnP, width: '100%', padding: 16, marginTop: 8 }, onClick: () => { setModal(null); showToast('Saved!'); } }, 'Save')
       )
     ),
+
+    // Weekly Settings Modal
     modal === 'weeklySet' && React.createElement('div', { style: s.modal, onClick: () => setModal(null) },
       React.createElement('div', { style: s.mBox, onClick: e => e.stopPropagation() },
         React.createElement('div', { style: s.mHead }, React.createElement('h3', { style: s.mTitle }, '📅 Weekly Targets'), React.createElement('button', { style: s.mClose, onClick: () => setModal(null) }, '×')),
@@ -874,24 +909,39 @@ const App = () => {
         React.createElement('button', { style: { ...s.btn, ...s.btnP, width: '100%', padding: 16, marginTop: 8 }, onClick: () => { setModal(null); showToast('Saved!'); } }, 'Save')
       )
     ),
+
+    // Settings Modal - with Auto Theme and Timezone
     modal === 'settings' && React.createElement('div', { style: s.modal, onClick: () => setModal(null) },
       React.createElement('div', { style: s.mBox, onClick: e => e.stopPropagation() },
         React.createElement('div', { style: s.mHead }, React.createElement('h3', { style: s.mTitle }, '⚙️ Settings'), React.createElement('button', { style: s.mClose, onClick: () => setModal(null) }, '×')),
+        
         React.createElement('div', { style: { marginBottom: 24 } },
           React.createElement('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 12 } }, '🎨 Appearance'),
-          React.createElement('div', { style: { display: 'flex', gap: 10 } },
-            React.createElement('button', { onClick: () => setDark(true), style: { ...s.btn, flex: 1, padding: 14, background: dark ? t.accent : t.input, color: dark ? '#000' : t.text } }, '🌙 Dark'),
-            React.createElement('button', { onClick: () => setDark(false), style: { ...s.btn, flex: 1, padding: 14, background: !dark ? t.accent : t.input, color: !dark ? '#000' : t.text } }, '☀️ Light')
+          React.createElement('div', { style: { display: 'flex', gap: 8 } },
+            React.createElement('button', { onClick: () => setSettings(s => ({...s, theme: 'dark'})), style: { ...s.btn, flex: 1, padding: 12, background: settings.theme === 'dark' ? t.accent : t.input, color: settings.theme === 'dark' ? '#000' : t.text } }, '🌙 Dark'),
+            React.createElement('button', { onClick: () => setSettings(s => ({...s, theme: 'light'})), style: { ...s.btn, flex: 1, padding: 12, background: settings.theme === 'light' ? t.accent : t.input, color: settings.theme === 'light' ? '#000' : t.text } }, '☀️ Light'),
+            React.createElement('button', { onClick: () => setSettings(s => ({...s, theme: 'auto'})), style: { ...s.btn, flex: 1, padding: 12, background: settings.theme === 'auto' ? t.accent : t.input, color: settings.theme === 'auto' ? '#000' : t.text } }, '🔄 Auto')
           )
         ),
+        
+        React.createElement('div', { style: { marginBottom: 24 } },
+          React.createElement('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 12 } }, '🌍 Timezone'),
+          React.createElement('select', { style: s.sel, value: settings.timezone, onChange: e => setSettings(s => ({...s, timezone: e.target.value})) },
+            timezones.map(tz => React.createElement('option', { key: tz, value: tz }, tz))
+          ),
+          React.createElement('div', { style: { fontSize: 11, color: t.muted, marginTop: 4 } }, 'Daily reset happens at midnight in your timezone')
+        ),
+        
         React.createElement('div', { style: { marginBottom: 24 } },
           React.createElement('div', { style: { fontSize: 13, fontWeight: 600, marginBottom: 12 } }, '⚠️ Danger Zone'),
-          React.createElement('button', { onClick: () => { if(confirm('Reset ALL data?')) { localStorage.clear(); location.reload(); }}, style: { ...s.btn, ...s.btnD, width: '100%', padding: 14 } }, '🗑️ Reset All Data')
+          React.createElement('button', { onClick: () => { if(confirm('Reset ALL data? This cannot be undone.')) { localStorage.clear(); location.reload(); }}, style: { ...s.btn, ...s.btnD, width: '100%', padding: 14 } }, '🗑️ Reset All Data')
         ),
+        
         React.createElement('button', { style: { ...s.btn, ...s.btnS, width: '100%', padding: 14 }, onClick: () => setModal(null) }, 'Close')
       )
     ),
-    // TOAST
+
+    // Toast
     React.createElement('div', { style: s.toastStyle }, toast.msg)
   );
 };
