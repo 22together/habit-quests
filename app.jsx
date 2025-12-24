@@ -982,7 +982,17 @@ const App = () => {
         )
       )
     ),
- onChange: e => setNewQuest({ ...newQuest, desc: e.target.value }) }),
+
+    modal === 'addQuest' && React.createElement('div', { style: s.modal, onClick: () => setModal(null) },
+      React.createElement('div', { style: s.mBox, onClick: e => e.stopPropagation() },
+        React.createElement('div', { style: s.mHead }, 
+          React.createElement('h3', { style: s.mTitle }, 'Add Quest'), 
+          React.createElement('button', { style: s.mClose, onClick: () => setModal(null) }, '×')
+        ),
+        React.createElement('label', { style: s.label }, 'Name'),
+        React.createElement('input', { style: s.inp, placeholder: 'Quest name', value: newQuest.name, onChange: e => setNewQuest({ ...newQuest, name: e.target.value }) }),
+        React.createElement('label', { style: s.label }, 'Description'),
+        React.createElement('input', { style: s.inp, placeholder: 'Short description', value: newQuest.desc, onChange: e => setNewQuest({ ...newQuest, desc: e.target.value }) }),
         React.createElement('label', { style: s.label }, 'XP'),
         React.createElement('input', { style: s.inp, type: 'number', value: newQuest.xp, onChange: e => setNewQuest({ ...newQuest, xp: e.target.value }) }),
         React.createElement('label', { style: s.label }, 'Category'),
