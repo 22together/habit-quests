@@ -1,28 +1,93 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#0a0a0f">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Inevitable 2026</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif; background: #0a0a0f; overflow-x: hidden; }
-    #root { min-height: 100vh; }
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0a0a0b">
+    <title>Inevitable 2026</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #141416;
+            --bg-tertiary: #1c1c1f;
+            --bg-elevated: #242428;
+            --bg-glass: rgba(255, 255, 255, 0.03);
+            --text-primary: #f5f5f7;
+            --text-secondary: rgba(245, 245, 247, 0.7);
+            --text-tertiary: rgba(245, 245, 247, 0.4);
+            --accent-primary: #2dd4bf;
+            --accent-secondary: #a78bfa;
+            --accent-success: #30d158;
+            --accent-warning: #ff9f0a;
+            --accent-danger: #ff453a;
+            --accent-blue: #0a84ff;
+            --gradient-gold: linear-gradient(135deg, #ff9f0a 0%, #ffd60a 100%);
+            --gradient-success: linear-gradient(135deg, #30d158 0%, #2dd4bf 100%);
+            --gradient-fire: linear-gradient(135deg, #ff453a 0%, #ff9f0a 100%);
+            --gradient-mystical: linear-gradient(135deg, #a78bfa 0%, #ec4899 100%);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --shadow-glow: 0 0 40px rgba(45, 212, 191, 0.2);
+            --font-display: 'Instrument Serif', Georgia, serif;
+            --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        [data-theme="night"] {
+            --bg-primary: #0a0a0b; --bg-secondary: #141416; --bg-tertiary: #1c1c1f;
+            --accent-primary: #2dd4bf; --accent-secondary: #a78bfa;
+            --shadow-glow: 0 0 40px rgba(45, 212, 191, 0.2);
+        }
+        [data-theme="ocean"] {
+            --bg-primary: #0a1628; --bg-secondary: #0f2137; --bg-tertiary: #1a3a5c;
+            --accent-primary: #00d4ff; --accent-secondary: #00ff88;
+            --shadow-glow: 0 0 40px rgba(0, 212, 255, 0.2);
+        }
+        [data-theme="forest"] {
+            --bg-primary: #0d1208; --bg-secondary: #151f0f; --bg-tertiary: #1f3016;
+            --accent-primary: #7ed321; --accent-secondary: #a8e063;
+            --shadow-glow: 0 0 40px rgba(126, 211, 33, 0.2);
+        }
+        [data-theme="sakura"] {
+            --bg-primary: #1a0f14; --bg-secondary: #2a1620; --bg-tertiary: #3d1f2d;
+            --accent-primary: #ff6b9d; --accent-secondary: #ffa0c4;
+            --shadow-glow: 0 0 40px rgba(255, 107, 157, 0.2);
+        }
+        [data-theme="day"] {
+            --bg-primary: #f8f7f4; --bg-secondary: #ffffff; --bg-tertiary: #f0efe9;
+            --text-primary: #1a1a1a; --text-secondary: rgba(26, 26, 26, 0.7); --text-tertiary: rgba(26, 26, 26, 0.4);
+            --accent-primary: #0d9488; --accent-secondary: #7c3aed;
+            --shadow-glow: 0 0 40px rgba(13, 148, 136, 0.15);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; -webkit-font-smoothing: antialiased; }
+        body { font-family: var(--font-body); background: var(--bg-primary); color: var(--text-primary); min-height: 100vh; overflow-x: hidden; }
+        @keyframes pulse-glow { 0%, 100% { filter: drop-shadow(0 0 8px var(--accent-primary)); } 50% { filter: drop-shadow(0 0 20px var(--accent-primary)); } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        @keyframes confetti-fall { 0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+        @keyframes achievement-pop { 0% { transform: scale(0) rotate(-10deg); opacity: 0; } 50% { transform: scale(1.2) rotate(5deg); } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+        @keyframes ring-progress { 0% { stroke-dashoffset: 283; } }
+        @keyframes breathe-glow { 0%, 100% { box-shadow: 0 0 30px var(--accent-primary), inset 0 0 30px rgba(255,255,255,0.1); } 50% { box-shadow: 0 0 60px var(--accent-primary), 0 0 100px var(--accent-secondary), inset 0 0 50px rgba(255,255,255,0.2); } }
+        .glass { background: var(--bg-glass); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.05); }
+    </style>
 </head>
 <body>
-  <div id="root"></div>
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script type="text/babel" src="app.jsx"></script>
+    <div id="root"></div>
+    <script type="text/babel" src="app.jsx"></script>
 </body>
 </html>
