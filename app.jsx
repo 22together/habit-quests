@@ -804,10 +804,6 @@ const App = () => {
           )
         )
       ),
- 6px ' + colors.blue } }), ' Calls')
-          )
-        )
-      ),
 
       // YEAR TAB - FIXED order: consults -> deals -> calls
       tab === 'year' && React.createElement('div', { style: s.mainG },
