@@ -112,7 +112,7 @@ const App = () => {
   const [calls, setCalls] = useState(() => JSON.parse(localStorage.getItem('v8_calls') ?? '[]'));
   const [whoop, setWhoop] = useState(() => JSON.parse(localStorage.getItem('v8_whoop') ?? '{"recovery":70,"sleep":80,"strain":10,"hrv":55}'));
   const [whoopHist, setWhoopHist] = useState(() => JSON.parse(localStorage.getItem('v8_whoopHist') ?? '[]'));
-  const [achievements, setAchievements] = useState(() => JSON.parse(localStorage.getItem('v8_ach') ?? JSON.stringify(defAch.map(a => ({...a, unlocked: false})))'));
+  const [achievements, setAchievements] = useState(() => JSON.parse(localStorage.getItem('v8_ach') ?? JSON.stringify(defAch.map(a => ({...a, unlocked: false})))));
 
   // Forms
   const [newDeal, setNewDeal] = useState({ client:'', product:'', commission:'' });
